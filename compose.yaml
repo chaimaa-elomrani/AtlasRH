@@ -1,0 +1,9 @@
+services:
+  postgres:
+    image: 'postgres:latest'
+    environment:
+      - 'POSTGRES_DB=atlasrh'
+      - 'POSTGRES_PASSWORD=atlasrh_dev'
+      - 'POSTGRES_USER=atlasrh'
+    ports:
+      - '5432'
