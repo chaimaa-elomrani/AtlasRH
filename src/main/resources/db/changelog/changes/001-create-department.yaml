@@ -1,10 +1,10 @@
 databaseChangeLog:
   - changeSet:
-      id: 001-create-departments
+      id: 001-create-department
       author: atlasrh
       changes:
         - createTable:
-            tableName: departments
+            tableName: department
             columns:
               - column:
                   name: id
@@ -12,7 +12,7 @@ databaseChangeLog:
                   autoIncrement: true
                   constraints:
                     primaryKey: true
-                    primaryKeyName: pk_departments
+                    primaryKeyName: pk_department
                     nullable: false
               - column:
                   name: name
@@ -23,6 +23,10 @@ databaseChangeLog:
                   name: description
                   type: VARCHAR(500)
         - addUniqueConstraint:
-            tableName: departments
+            tableName: department
             columnNames: name
             constraintName: uk_departments_name
+
+
+
+#          /nvmw clean spring-boot:run
