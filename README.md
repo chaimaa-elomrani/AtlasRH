@@ -2,7 +2,7 @@
 
 AtlasRH est une API REST en Java destinée à centraliser la gestion RH d’une entreprise de 250 collaborateurs. Elle remplace progressivement les e-mails et les tableurs utilisés pour gérer les départements, les employés, les contrats et les congés.
 
-> **État du projet :** cette base correspond au démarrage du livrable 1. Le projet contient actuellement l’application Spring Boot, l’entité `Department`, l’entité `Employee` et une migration Liquibase pour les départements. Les endpoints et les autres fonctionnalités du brief restent à développer.
+> **État du projet :** la base contient l’application Spring Boot, les entités `Department`, `Employee` et `Contract`, ainsi que leurs migrations Liquibase. Les endpoints Responsable RH et les autres fonctionnalités du brief restent à développer.
 
 ## Objectifs fonctionnels
 
@@ -73,7 +73,7 @@ Les types de congé prévus sont le congé annuel et le congé exceptionnel. L�
 
    Sous Windows, utiliser `mvnw.cmd spring-boot:run`. Il est aussi possible d’utiliser `mvn spring-boot:run` si Maven est installé.
 
-> La base et la migration du département sont présentes, mais le schéma complet et les données de démonstration demandés par le brief ne sont pas encore implémentés. Les URL Swagger et les endpoints seront indiqués ici lorsqu’ils seront disponibles.
+> Les migrations couvrent actuellement les départements, employés et contrats. Le schéma complet et les données de démonstration demandés par le brief ne sont pas encore implémentés. Les URL Swagger et les endpoints seront indiqués ici lorsqu’ils seront disponibles.
 
 ## Architecture en couches
 
@@ -148,7 +148,8 @@ Les cardinalités décrivent le modèle cible. La règle d’un seul contrat en 
 | Fonctionnalité | État |
 | --- | --- |
 | Entité `Department` et unicité du nom | Présente ; migration Liquibase disponible |
-| Entité `Employee` et liens département / manager | Présente ; migration Liquibase à ajouter |
+| Entité `Employee` et liens département / manager | Présente ; migration Liquibase disponible |
+| Entité `Contract` et types CDI / CDD / STAGE | Présente ; migration Liquibase disponible |
 | API Responsable RH (US1 à US3) | À développer |
 | Contrats, congés et données de démonstration | À développer |
 | API Manager et employé (US4 à US6) | À développer |

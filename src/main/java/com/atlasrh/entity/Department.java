@@ -2,26 +2,30 @@ package com.atlasrh.entity;
 
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 
 @Entity
-@Table(name = "department" , uniqueConstraints = @UniqueConstraint( // unique contrainte est une list de contraintes et @uni... est une de ces containtes la
-		name = "uk_departments_name" , // contrainte dunicité : uk --> unique key
+@Table(name = "department", uniqueConstraints = @UniqueConstraint(
+		name = "uk_departments_name",
 		columnNames = "name"
 ))
-
-public class Department{
+public class Department {
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
-	private Long id ;
+	private Long id;
 
-	@Column(nullable = false , length = 100)
-	private String name ;
+	@NotBlank
+	@Size(max = 100)
+	@Column(nullable = false, length = 100)
+	private String name;
 
+	@Size(max = 500)
 	@Column(length = 500)
-	private String description ;
+	private String description;
 
-	protected Department(){
+	protected Department() {
 
 	}
 

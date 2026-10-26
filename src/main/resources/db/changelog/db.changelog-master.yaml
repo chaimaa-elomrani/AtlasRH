@@ -2,3 +2,6 @@ databaseChangeLog:
   - include:
       file: changes/001-create-department.yaml
       relativeToChangelogFile: true
+  - include:
+      file: changes/002-create-employee-and-contract.yaml
+      relativeToChangelogFile: true
