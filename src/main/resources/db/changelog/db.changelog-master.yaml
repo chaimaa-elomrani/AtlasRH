@@ -5,3 +5,6 @@ databaseChangeLog:
   - include:
       file: changes/002-create-employee-and-contract.yaml
       relativeToChangelogFile: true
+  - include:
+      file: changes/003-create-leave-management.yaml
+      relativeToChangelogFile: true
