@@ -2,7 +2,7 @@
 
 AtlasRH est une API REST en Java destinée à centraliser la gestion RH d’une entreprise de 250 collaborateurs. Elle remplace progressivement les e-mails et les tableurs utilisés pour gérer les départements, les employés, les contrats et les congés.
 
-> **État du projet :** la base contient l’application Spring Boot, les entités `Department`, `Employee` et `Contract`, ainsi que leurs migrations Liquibase. Les endpoints Responsable RH et les autres fonctionnalités du brief restent à développer.
+> **État du projet :** l’API du livrable Responsable RH est disponible pour les départements, employés et contrats. Les fonctionnalités Manager / Employé, les congés et les données de démonstration restent à développer.
 
 ## Objectifs fonctionnels
 
@@ -73,7 +73,20 @@ Les types de congé prévus sont le congé annuel et le congé exceptionnel. L�
 
    Sous Windows, utiliser `mvnw.cmd spring-boot:run`. Il est aussi possible d’utiliser `mvn spring-boot:run` si Maven est installé.
 
-> Les migrations couvrent actuellement les départements, employés et contrats. Le schéma complet et les données de démonstration demandés par le brief ne sont pas encore implémentés. Les URL Swagger et les endpoints seront indiqués ici lorsqu’ils seront disponibles.
+Les endpoints RH sont accessibles sous `/api` :
+
+| Méthode | Route | Fonction |
+| --- | --- | --- |
+| `GET`, `POST` | `/departments` | Lister et créer les départements |
+| `GET`, `PUT`, `DELETE` | `/departments/{id}` | Consulter, modifier ou supprimer un département |
+| `GET` | `/employees` | Rechercher et paginer les employés (`q`, `page`, `size`, `sort`) |
+| `GET`, `PUT`, `DELETE` | `/employees/{id}` | Consulter, modifier ou supprimer un employé |
+| `POST` | `/employees` | Créer un employé |
+| `POST` | `/contracts` | Créer un contrat CDI, CDD ou STAGE |
+| `GET` | `/contracts/employee/{employeeId}` | Consulter l’historique des contrats d’un employé |
+| `PATCH` | `/contracts/{id}/end` | Terminer un contrat (`endDate` facultatif, format `YYYY-MM-DD`) |
+
+Les corps de création et modification utilisent les DTO du projet. Les erreurs sont renvoyées en JSON avec un statut adapté : `400` pour une requête invalide, `404` pour une ressource absente et `409` en cas de conflit métier.
 
 ## Architecture en couches
 
@@ -150,7 +163,7 @@ Les cardinalités décrivent le modèle cible. La règle d’un seul contrat en 
 | Entité `Department` et unicité du nom | Présente ; migration Liquibase disponible |
 | Entité `Employee` et liens département / manager | Présente ; migration Liquibase disponible |
 | Entité `Contract` et types CDI / CDD / STAGE | Présente ; migration Liquibase disponible |
-| API Responsable RH (US1 à US3) | À développer |
+| API Responsable RH (US1 à US3) | Disponible : départements, employés et contrats |
 | Contrats, congés et données de démonstration | À développer |
 | API Manager et employé (US4 à US6) | À développer |
 | Swagger, DTO, MapStruct et gestion centralisée des erreurs | À intégrer avec les endpoints |
