@@ -2,7 +2,7 @@
 
 AtlasRH est une API REST en Java destinée à centraliser la gestion RH d’une entreprise de 250 collaborateurs. Elle remplace progressivement les e-mails et les tableurs utilisés pour gérer les départements, les employés, les contrats et les congés.
 
-> **État du projet :** l’API du livrable Responsable RH est disponible pour les départements, employés et contrats. Les fonctionnalités Manager / Employé, les congés et les données de démonstration restent à développer.
+> **État du projet :** l’API Responsable RH et le libre-service employé (demandes de congé, solde, ancienneté) sont disponibles. Les décisions Manager, l’authentification et les données de démonstration restent à développer.
 
 ## Objectifs fonctionnels
 
@@ -85,12 +85,17 @@ Les endpoints RH sont accessibles sous `/api` :
 | `POST` | `/contracts` | Créer un contrat CDI, CDD ou STAGE |
 | `GET` | `/contracts/employee/{employeeId}` | Consulter l’historique des contrats d’un employé |
 | `PATCH` | `/contracts/{id}/end` | Terminer un contrat (`endDate` facultatif, format `YYYY-MM-DD`) |
+| `GET`, `POST`, `PUT` | `/leave-types`, `/leave-types/{id}` | Consulter et configurer les quotas annuels des congés annuel et exceptionnel |
+| `POST`, `GET` | `/employees/{employeeId}/leave-requests` | Créer une demande et consulter l’historique de l’employé |
+| `PATCH` | `/employees/{employeeId}/leave-requests/{requestId}/cancel` | Annuler une demande en attente |
+| `GET` | `/employees/{employeeId}/leave-balance?year=2026` | Consulter le solde par type (année courante par défaut) |
+| `GET` | `/employees/{employeeId}/seniority` | Consulter l’ancienneté calculée depuis la date d’embauche |
 
-Les corps de création et modification utilisent les DTO du projet. Les erreurs sont renvoyées en JSON avec un statut adapté : `400` pour une requête invalide, `404` pour une ressource absente et `409` en cas de conflit métier.
+Les corps de création et modification utilisent les DTO du projet. Avant les demandes, configurer les deux types de congé et leurs quotas avec `POST /api/leave-types` (codes `ANNUAL` et `EXCEPTIONAL`, champ `daysPerYear`). Les jours ouvrés sont calculés du lundi au vendredi, dates comprises; le calendrier des jours fériés n’est pas encore pris en compte. En V1, les routes reçoivent un `employeeId` et ne vérifient pas l’identité de l’appelant. Les erreurs sont renvoyées en JSON avec un statut adapté : `400` pour une requête invalide, `404` pour une ressource absente et `409` en cas de conflit métier.
 
 ## Architecture en couches
 
-Le code applicatif se trouve sous `src/main/java/com/atlasrh`. Les packages `controller`, `service`, `repository`, `dto` et `mapper` représentent l’architecture cible ; ils seront complétés au fil des fonctionnalités.
+Le code applicatif se trouve sous `src/main/java/com/atlasrh`, organisé en packages `controller`, `service`, `repository`, `dto` et `entity`.
 
 | Couche | Responsabilité | Convention |
 | --- | --- | --- |
@@ -164,9 +169,12 @@ Les cardinalités décrivent le modèle cible. La règle d’un seul contrat en 
 | Entité `Employee` et liens département / manager | Présente ; migration Liquibase disponible |
 | Entité `Contract` et types CDI / CDD / STAGE | Présente ; migration Liquibase disponible |
 | API Responsable RH (US1 à US3) | Disponible : départements, employés et contrats |
-| Contrats, congés et données de démonstration | À développer |
-| API Manager et employé (US4 à US6) | À développer |
-| Swagger, DTO, MapStruct et gestion centralisée des erreurs | À intégrer avec les endpoints |
+| API employé : demandes, historique, annulation, solde et ancienneté | Disponible ; quotas à configurer |
+| Décision des demandes par un manager (approbation / refus commenté) | À développer |
+| Contrats, règles de congé liées aux jours fériés et données de démonstration | Partiellement disponible / à développer |
+| API Manager (US4) | À développer |
+| Swagger / OpenAPI et MapStruct | À intégrer |
+| DTO et gestion centralisée des erreurs | Présents |
 
 ## Améliorations prévues (bonus)
 
