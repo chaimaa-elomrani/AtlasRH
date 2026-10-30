@@ -74,10 +74,8 @@ databaseChangeLog:
             referencedColumnNames: id
             constraintName: fk_employee_manager
             onDelete: RESTRICT
-        - addCheckConstraint:
-            tableName: employee
-            constraintName: ck_employee_not_own_manager
-            constraintBody: manager_id IS NULL OR manager_id <> id
+        - sql:
+            sql: ALTER TABLE employee ADD CONSTRAINT ck_employee_not_own_manager CHECK (manager_id IS NULL OR manager_id <> id)
 
   - changeSet:
       id: 003-create-contract
@@ -124,19 +122,21 @@ databaseChangeLog:
             referencedColumnNames: id
             constraintName: fk_contract_employee
             onDelete: RESTRICT
-        - addCheckConstraint:
-            tableName: contract
-            constraintName: ck_contract_valid_type
-            constraintBody: contract_type IN ('CDI', 'CDD', 'STAGE')
-        - addCheckConstraint:
-            tableName: contract
-            constraintName: ck_contract_valid_dates
-            constraintBody: end_date IS NULL OR end_date >= start_date
-        - addCheckConstraint:
-            tableName: contract
-            constraintName: ck_contract_fixed_term_end_date
-            constraintBody: contract_type = 'CDI' OR end_date IS NOT NULL
-        - addCheckConstraint:
-            tableName: contract
-            constraintName: ck_contract_positive_salary
-            constraintBody: gross_salary > 0
+        - sql:
+            sql: ALTER TABLE contract ADD CONSTRAINT ck_contract_valid_type CHECK (contract_type IN ('CDI', 'CDD', 'STAGE'))
+        - sql:
+            sql: ALTER TABLE contract ADD CONSTRAINT ck_contract_valid_dates CHECK (end_date IS NULL OR end_date >= start_date)
+        - sql:
+            sql: ALTER TABLE contract ADD CONSTRAINT ck_contract_fixed_term_end_date CHECK (contract_type = 'CDI' OR end_date IS NOT NULL)
+        - sql:
+            sql: ALTER TABLE contract ADD CONSTRAINT ck_contract_positive_salary CHECK (gross_salary > 0)
+  - changeSet:
+      id: 004-case-insensitive-unique-fields
+      author: atlasrh
+      changes:
+        - sql:
+            sql: CREATE UNIQUE INDEX IF NOT EXISTS uk_department_name_lower ON department (lower(name))
+        - sql:
+            sql: CREATE UNIQUE INDEX IF NOT EXISTS uk_employee_matricule_lower ON employee (lower(matricule))
+        - sql:
+            sql: CREATE UNIQUE INDEX IF NOT EXISTS uk_employee_email_lower ON employee (lower(email))

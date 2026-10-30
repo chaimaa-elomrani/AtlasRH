@@ -1,8 +1,8 @@
 package com.atlasrh.entity;
 
 public enum LeaveStatus {
-    PENDING,
-    APPROVED,
-    REJECTED,
-    CANCELLED
+    EN_ATTENTE,
+    APPROUVEE,
+    REFUSEE,
+    ANNULEE
 }

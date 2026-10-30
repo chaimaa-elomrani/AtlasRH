@@ -9,6 +9,7 @@ import com.atlasrh.exception.InvalidRequestException;
 import com.atlasrh.exception.ResourceNotFoundException;
 import com.atlasrh.repository.DepartmentRepository;
 import com.atlasrh.repository.EmployeeRepository;
+import com.atlasrh.mapper.EmployeeMapper;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -19,17 +20,29 @@ import org.springframework.transaction.annotation.Transactional;
 public class EmployeeService {
     private final EmployeeRepository employees;
     private final DepartmentRepository departments;
+    private final EmployeeMapper mapper;
 
-    public EmployeeService(EmployeeRepository employees, DepartmentRepository departments) {
+    public EmployeeService(EmployeeRepository employees, DepartmentRepository departments, EmployeeMapper mapper) {
         this.employees = employees;
         this.departments = departments;
+        this.mapper = mapper;
     }
 
     @Transactional(readOnly = true)
     public Page<EmployeeResponse> search(String query, Pageable pageable) {
-        if (query == null || query.isBlank()) return employees.findAll(pageable).map(this::toResponse);
-        String q = query.trim();
-        return employees.findByMatriculeContainingIgnoreCaseOrFirstNameContainingIgnoreCaseOrLastNameContainingIgnoreCaseOrEmailContainingIgnoreCase(q, q, q, q, pageable).map(this::toResponse);
+        return search(query, null, pageable);
+    }
+
+    @Transactional(readOnly = true)
+    public Page<EmployeeResponse> search(String query, Long departmentId, Pageable pageable) {
+        String normalized = query == null || query.isBlank() ? null : query.trim();
+        return employees.search(normalized, departmentId, pageable).map(this::toResponse);
+    }
+
+    @Transactional(readOnly = true)
+    public Page<EmployeeResponse> team(Long managerId, Pageable pageable) {
+        if (!employees.existsById(managerId)) throw new ResourceNotFoundException("Employee " + managerId + " not found");
+        return employees.findByManagerId(managerId, pageable).map(this::toResponse);
     }
 
     @Transactional(readOnly = true)
@@ -76,5 +89,5 @@ public class EmployeeService {
     }
 
     private Employee getEmployee(Long id) { return employees.findById(id).orElseThrow(() -> new ResourceNotFoundException("Employee " + id + " not found")); }
-    private EmployeeResponse toResponse(Employee e) { return new EmployeeResponse(e.getId(), e.getMatricule(), e.getFirstName(), e.getLastName(), e.getEmail(), e.getPoste(), e.getHireDate(), e.getDepartment().getId(), e.getDepartment().getName(), e.getManager() == null ? null : e.getManager().getId()); }
+    private EmployeeResponse toResponse(Employee e) { return mapper.toResponse(e); }
 }

@@ -10,6 +10,7 @@ import com.atlasrh.exception.InvalidRequestException;
 import com.atlasrh.exception.ResourceNotFoundException;
 import com.atlasrh.repository.ContractRepository;
 import com.atlasrh.repository.EmployeeRepository;
+import com.atlasrh.mapper.ContractMapper;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -21,10 +22,12 @@ import java.util.List;
 public class ContractService {
     private final ContractRepository contracts;
     private final EmployeeRepository employees;
+    private final ContractMapper mapper;
 
-    public ContractService(ContractRepository contracts, EmployeeRepository employees) {
+    public ContractService(ContractRepository contracts, EmployeeRepository employees, ContractMapper mapper) {
         this.contracts = contracts;
         this.employees = employees;
+        this.mapper = mapper;
     }
 
     @Transactional(readOnly = true)
@@ -64,5 +67,5 @@ public class ContractService {
     }
 
     private Employee requireEmployee(Long id) { return employees.findById(id).orElseThrow(() -> new ResourceNotFoundException("Employee " + id + " not found")); }
-    private ContractResponse toResponse(Contract c) { return new ContractResponse(c.getId(), c.getType(), c.getStartDate(), c.getEndDate(), c.getGrossSalary(), c.getEmployee().getId()); }
+    private ContractResponse toResponse(Contract c) { return mapper.toResponse(c); }
 }

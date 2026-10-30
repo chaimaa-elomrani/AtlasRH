@@ -7,6 +7,7 @@ import com.atlasrh.exception.BusinessConflictException;
 import com.atlasrh.exception.InvalidRequestException;
 import com.atlasrh.exception.ResourceNotFoundException;
 import com.atlasrh.repository.LeaveTypeRepository;
+import com.atlasrh.mapper.LeaveTypeMapper;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -16,7 +17,8 @@ import java.util.List;
 @Transactional
 public class LeaveTypeService {
     private final LeaveTypeRepository types;
-    public LeaveTypeService(LeaveTypeRepository types) { this.types = types; }
+    private final LeaveTypeMapper mapper;
+    public LeaveTypeService(LeaveTypeRepository types, LeaveTypeMapper mapper) { this.types = types; this.mapper = mapper; }
 
     @Transactional(readOnly = true)
     public List<LeaveTypeResponse> findAll() { return types.findAll().stream().map(this::toResponse).toList(); }
@@ -37,5 +39,5 @@ public class LeaveTypeService {
         return toResponse(type);
     }
 
-    private LeaveTypeResponse toResponse(LeaveType type) { return new LeaveTypeResponse(type.getId(), type.getCode(), type.getDaysPerYear()); }
+    private LeaveTypeResponse toResponse(LeaveType type) { return mapper.toResponse(type); }
 }

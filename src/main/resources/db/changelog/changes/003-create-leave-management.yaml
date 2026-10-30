@@ -26,14 +26,10 @@ databaseChangeLog:
                   type: INT
                   constraints:
                     nullable: false
-        - addCheckConstraint:
-            tableName: leave_type
-            constraintName: ck_leave_type_valid_code
-            constraintBody: code IN ('ANNUAL', 'EXCEPTIONAL')
-        - addCheckConstraint:
-            tableName: leave_type
-            constraintName: ck_leave_type_nonnegative_days
-            constraintBody: days_per_year >= 0
+        - sql:
+            sql: ALTER TABLE leave_type ADD CONSTRAINT ck_leave_type_valid_code CHECK (code IN ('ANNUAL', 'EXCEPTIONAL'))
+        - sql:
+            sql: ALTER TABLE leave_type ADD CONSTRAINT ck_leave_type_nonnegative_days CHECK (days_per_year >= 0)
 
   - changeSet:
       id: 005-create-leave-request
@@ -101,18 +97,12 @@ databaseChangeLog:
             referencedColumnNames: id
             constraintName: fk_leave_request_type
             onDelete: RESTRICT
-        - addCheckConstraint:
-            tableName: leave_request
-            constraintName: ck_leave_request_valid_status
-            constraintBody: status IN ('PENDING', 'APPROVED', 'REJECTED', 'CANCELLED')
-        - addCheckConstraint:
-            tableName: leave_request
-            constraintName: ck_leave_request_valid_dates
-            constraintBody: end_date >= start_date
-        - addCheckConstraint:
-            tableName: leave_request
-            constraintName: ck_leave_request_positive_days
-            constraintBody: working_days > 0
+        - sql:
+            sql: ALTER TABLE leave_request ADD CONSTRAINT ck_leave_request_valid_status CHECK (status IN ('PENDING', 'APPROVED', 'REJECTED', 'CANCELLED'))
+        - sql:
+            sql: ALTER TABLE leave_request ADD CONSTRAINT ck_leave_request_valid_dates CHECK (end_date >= start_date)
+        - sql:
+            sql: ALTER TABLE leave_request ADD CONSTRAINT ck_leave_request_positive_days CHECK (working_days > 0)
         - createIndex:
             tableName: leave_request
             indexName: ix_leave_request_employee_dates
@@ -123,3 +113,75 @@ databaseChangeLog:
                   name: start_date
               - column:
                   name: end_date
+  - changeSet:
+      id: 006-localize-leave-statuses
+      author: atlasrh
+      changes:
+        - sql:
+            sql: ALTER TABLE leave_request DROP CONSTRAINT ck_leave_request_valid_status
+        - update:
+            tableName: leave_request
+            columns:
+              - column: { name: status, value: EN_ATTENTE }
+            where: status = 'PENDING'
+        - update:
+            tableName: leave_request
+            columns:
+              - column: { name: status, value: APPROUVEE }
+            where: status = 'APPROVED'
+        - update:
+            tableName: leave_request
+            columns:
+              - column: { name: status, value: REFUSEE }
+            where: status = 'REJECTED'
+        - update:
+            tableName: leave_request
+            columns:
+              - column: { name: status, value: ANNULEE }
+            where: status = 'CANCELLED'
+        - sql:
+            sql: ALTER TABLE leave_request ADD CONSTRAINT ck_leave_request_valid_status CHECK (status IN ('EN_ATTENTE', 'APPROUVEE', 'REFUSEE', 'ANNULEE'))
+        - sql:
+            sql: ALTER TABLE leave_request ALTER COLUMN status SET DEFAULT 'EN_ATTENTE'
+  - changeSet:
+      id: 007-seed-leave-types
+      author: atlasrh
+      changes:
+        - insert:
+            tableName: leave_type
+            columns:
+              - column: { name: code, value: ANNUAL }
+              - column: { name: days_per_year, valueNumeric: 22 }
+        - insert:
+            tableName: leave_type
+            columns:
+              - column: { name: code, value: EXCEPTIONAL }
+              - column: { name: days_per_year, valueNumeric: 3 }
+  - changeSet:
+      id: 008-seed-demo-organization
+      author: atlasrh
+      changes:
+        - sql:
+            sql: >-
+              INSERT INTO department (name, description)
+              VALUES ('Direction des ressources humaines', 'Département de démonstration AtlasRH')
+              ON CONFLICT (name) DO NOTHING
+        - sql:
+            sql: >-
+              INSERT INTO employee (matricule, first_name, last_name, email, poste, hire_date, department_id)
+              SELECT 'ATL-DEMO-MGR', 'Nadia', 'Bennani', 'nadia.bennani@example.test', 'Responsable RH', DATE '2022-04-11', d.id
+              FROM department d WHERE d.name = 'Direction des ressources humaines'
+              ON CONFLICT (matricule) DO NOTHING
+        - sql:
+            sql: >-
+              INSERT INTO employee (matricule, first_name, last_name, email, poste, hire_date, department_id, manager_id)
+              SELECT 'ATL-DEMO-EMP', 'Youssef', 'El Idrissi', 'youssef.elidrissi@example.test', 'Assistant RH', DATE '2024-09-02', d.id, m.id
+              FROM department d CROSS JOIN employee m
+              WHERE d.name = 'Direction des ressources humaines' AND m.matricule = 'ATL-DEMO-MGR'
+              ON CONFLICT (matricule) DO NOTHING
+        - sql:
+            sql: >-
+              INSERT INTO contract (contract_type, start_date, end_date, gross_salary, employee_id)
+              SELECT 'CDI', DATE '2024-09-02', NULL, 12500.00, e.id
+              FROM employee e WHERE e.matricule = 'ATL-DEMO-EMP'
+                AND NOT EXISTS (SELECT 1 FROM contract c WHERE c.employee_id = e.id)

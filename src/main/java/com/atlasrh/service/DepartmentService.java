@@ -7,6 +7,7 @@ import com.atlasrh.exception.BusinessConflictException;
 import com.atlasrh.exception.ResourceNotFoundException;
 import com.atlasrh.repository.DepartmentRepository;
 import com.atlasrh.repository.EmployeeRepository;
+import com.atlasrh.mapper.DepartmentMapper;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -17,10 +18,12 @@ import java.util.List;
 public class DepartmentService {
     private final DepartmentRepository departments;
     private final EmployeeRepository employees;
+    private final DepartmentMapper mapper;
 
-    public DepartmentService(DepartmentRepository departments, EmployeeRepository employees) {
+    public DepartmentService(DepartmentRepository departments, EmployeeRepository employees, DepartmentMapper mapper) {
         this.departments = departments;
         this.employees = employees;
+        this.mapper = mapper;
     }
 
     @Transactional(readOnly = true)
@@ -52,5 +55,5 @@ public class DepartmentService {
     private Department getDepartment(Long id) {
         return departments.findById(id).orElseThrow(() -> new ResourceNotFoundException("Department " + id + " not found"));
     }
-    private DepartmentResponse toResponse(Department d) { return new DepartmentResponse(d.getId(), d.getName(), d.getDescription()); }
+    private DepartmentResponse toResponse(Department d) { return mapper.toResponse(d); }
 }

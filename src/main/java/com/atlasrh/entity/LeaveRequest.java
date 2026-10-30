@@ -43,7 +43,7 @@ public class LeaveRequest {
     @NotNull
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
-    private LeaveStatus status = LeaveStatus.PENDING;
+    private LeaveStatus status = LeaveStatus.EN_ATTENTE;
 
     @Column(name = "decision_comment", length = 1000)
     private String decisionComment;

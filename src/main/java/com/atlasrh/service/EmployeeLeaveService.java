@@ -3,6 +3,7 @@ package com.atlasrh.service;
 import com.atlasrh.dto.employee.SeniorityResponse;
 import com.atlasrh.dto.leave.LeaveBalanceItem;
 import com.atlasrh.dto.leave.LeaveRequestInput;
+import com.atlasrh.dto.leave.LeaveDecisionInput;
 import com.atlasrh.dto.leave.LeaveRequestResponse;
 import com.atlasrh.entity.*;
 import com.atlasrh.exception.BusinessConflictException;
@@ -11,33 +12,66 @@ import com.atlasrh.exception.ResourceNotFoundException;
 import com.atlasrh.repository.EmployeeRepository;
 import com.atlasrh.repository.LeaveRequestRepository;
 import com.atlasrh.repository.LeaveTypeRepository;
+import com.atlasrh.mapper.LeaveRequestMapper;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.Period;
 import java.time.temporal.ChronoUnit;
-import java.util.ArrayList;
 import java.util.List;
 
 @Service
 @Transactional
 public class EmployeeLeaveService {
+    private static final Logger log = LoggerFactory.getLogger(EmployeeLeaveService.class);
     private final EmployeeRepository employees;
     private final LeaveTypeRepository types;
     private final LeaveRequestRepository requests;
+    private final LeaveRequestMapper mapper;
 
-    public EmployeeLeaveService(EmployeeRepository employees, LeaveTypeRepository types, LeaveRequestRepository requests) {
+    public EmployeeLeaveService(EmployeeRepository employees, LeaveTypeRepository types, LeaveRequestRepository requests, LeaveRequestMapper mapper) {
         this.employees = employees;
         this.types = types;
         this.requests = requests;
+        this.mapper = mapper;
     }
 
     @Transactional(readOnly = true)
     public List<LeaveRequestResponse> findRequests(Long employeeId) {
         requireEmployee(employeeId);
         return requests.findByEmployeeIdOrderByStartDateDesc(employeeId).stream().map(this::toResponse).toList();
+    }
+
+    @Transactional(readOnly = true)
+    public List<LeaveRequestResponse> findRequests(Long employeeId, LeaveStatus status) {
+        return findRequests(employeeId).stream().filter(r -> status == null || r.status() == status).toList();
+    }
+
+    @Transactional(readOnly = true)
+    public List<LeaveRequestResponse> findPendingForManager(Long managerId) {
+        requireEmployee(managerId);
+        return requests.findByEmployeeManagerIdAndStatusOrderByStartDateAsc(managerId, LeaveStatus.EN_ATTENTE)
+                .stream().map(this::toResponse).toList();
+    }
+
+    public LeaveRequestResponse decide(Long managerId, Long requestId, LeaveDecisionInput input) {
+        requireEmployee(managerId);
+        LeaveRequest request = requests.findById(requestId)
+                .orElseThrow(() -> new ResourceNotFoundException("Leave request " + requestId + " not found"));
+        if (request.getEmployee().getManager() == null || !request.getEmployee().getManager().getId().equals(managerId)) {
+            throw new ResourceNotFoundException("Leave request " + requestId + " not found for manager " + managerId);
+        }
+        if (request.getStatus() != LeaveStatus.EN_ATTENTE) throw new BusinessConflictException("Only pending leave requests can be decided");
+        String comment = input.comment() == null || input.comment().isBlank() ? null : input.comment().trim();
+        if (!input.approved() && comment == null) throw new InvalidRequestException("A comment is required to refuse a leave request");
+        request.setStatus(input.approved() ? LeaveStatus.APPROUVEE : LeaveStatus.REFUSEE);
+        request.setDecisionComment(comment);
+        log.info("Leave request {} decided by manager {} with status {}", requestId, managerId, request.getStatus());
+        return toResponse(request);
     }
 
     public LeaveRequestResponse create(Long employeeId, LeaveRequestInput input) {
@@ -62,7 +96,8 @@ public class EmployeeLeaveService {
         request.setEndDate(input.endDate());
         request.setWorkingDays(workingDays);
         request.setReason(input.reason() == null || input.reason().isBlank() ? null : input.reason().trim());
-        request.setStatus(LeaveStatus.PENDING);
+        request.setStatus(LeaveStatus.EN_ATTENTE);
+        log.info("Leave request submitted for employee {} and leave type {}", employeeId, type.getCode());
         return toResponse(requests.save(request));
     }
 
@@ -70,8 +105,9 @@ public class EmployeeLeaveService {
         requireEmployee(employeeId);
         LeaveRequest request = requests.findById(requestId).orElseThrow(() -> new ResourceNotFoundException("Leave request " + requestId + " not found"));
         if (!request.getEmployee().getId().equals(employeeId)) throw new ResourceNotFoundException("Leave request " + requestId + " not found for employee " + employeeId);
-        if (request.getStatus() != LeaveStatus.PENDING) throw new BusinessConflictException("Only pending leave requests can be cancelled");
-        request.setStatus(LeaveStatus.CANCELLED);
+        if (request.getStatus() != LeaveStatus.EN_ATTENTE) throw new BusinessConflictException("Only pending leave requests can be cancelled");
+        request.setStatus(LeaveStatus.ANNULEE);
+        log.info("Leave request {} cancelled by employee {}", requestId, employeeId);
         return toResponse(request);
     }
 
@@ -81,7 +117,7 @@ public class EmployeeLeaveService {
         List<LeaveRequest> employeeRequests = requests.findByEmployeeIdOrderByStartDateDesc(employeeId);
         return types.findAll().stream().map(type -> {
             int approved = employeeRequests.stream()
-                    .filter(r -> r.getLeaveType().getId().equals(type.getId()) && r.getStatus() == LeaveStatus.APPROVED)
+                    .filter(r -> r.getLeaveType().getId().equals(type.getId()) && r.getStatus() == LeaveStatus.APPROUVEE)
                     .mapToInt(r -> daysInYear(r.getStartDate(), r.getEndDate(), year)).sum();
             return new LeaveBalanceItem(type.getId(), type.getCode(), year, type.getDaysPerYear(), approved,
                     Math.max(0, type.getDaysPerYear() - approved));
@@ -109,7 +145,7 @@ public class EmployeeLeaveService {
     }
 
     private Employee requireEmployee(Long id) { return employees.findById(id).orElseThrow(() -> new ResourceNotFoundException("Employee " + id + " not found")); }
-    private boolean reservesDates(LeaveRequest request) { return request.getStatus() == LeaveStatus.PENDING || request.getStatus() == LeaveStatus.APPROVED; }
+    private boolean reservesDates(LeaveRequest request) { return request.getStatus() == LeaveStatus.EN_ATTENTE || request.getStatus() == LeaveStatus.APPROUVEE; }
     private boolean reservesBalance(LeaveRequest request) { return reservesDates(request); }
 
     private int daysInYear(LocalDate start, LocalDate end, int year) {
@@ -131,9 +167,5 @@ public class EmployeeLeaveService {
         return Math.toIntExact(weekdays);
     }
 
-    private LeaveRequestResponse toResponse(LeaveRequest request) {
-        return new LeaveRequestResponse(request.getId(), request.getEmployee().getId(), request.getLeaveType().getId(),
-                request.getLeaveType().getCode(), request.getStartDate(), request.getEndDate(), request.getWorkingDays(),
-                request.getReason(), request.getStatus(), request.getDecisionComment());
-    }
+    private LeaveRequestResponse toResponse(LeaveRequest request) { return mapper.toResponse(request); }
 }
