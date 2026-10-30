@@ -20,7 +20,7 @@ public class LeaveType {
     @Column(name = "days_per_year", nullable = false)
     private int daysPerYear;
 
-    protected LeaveType() {}
+    public LeaveType() {}
 
     public Long getId() { return id; }
     public LeaveTypeCode getCode() { return code; }

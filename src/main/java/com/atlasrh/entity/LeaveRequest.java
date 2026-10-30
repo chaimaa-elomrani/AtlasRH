@@ -48,7 +48,7 @@ public class LeaveRequest {
     @Column(name = "decision_comment", length = 1000)
     private String decisionComment;
 
-    protected LeaveRequest() {}
+    public LeaveRequest() {}
 
     public Long getId() { return id; }
     public Employee getEmployee() { return employee; }

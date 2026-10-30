@@ -39,7 +39,7 @@ public class Contract {
     @JoinColumn(name = "employee_id", nullable = false)
     private Employee employee;
 
-    protected Contract() {
+    public Contract() {
     }
 
     public Long getId() {

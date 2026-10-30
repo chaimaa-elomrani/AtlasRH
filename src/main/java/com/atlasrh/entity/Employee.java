@@ -60,7 +60,7 @@ public class Employee {
     @JoinColumn(name = "manager_id")
     private Employee manager;
 
-    protected Employee() {
+    public Employee() {
     }
 
     public Long getId() {
