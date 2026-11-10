@@ -116,6 +116,7 @@ databaseChangeLog:
   - changeSet:
       id: 006-localize-leave-statuses
       author: atlasrh
+      validCheckSum: 9:dd78086009b91b4a2cb1291773a186d4
       changes:
         - sql:
             sql: ALTER TABLE leave_request DROP CONSTRAINT ck_leave_request_valid_status
