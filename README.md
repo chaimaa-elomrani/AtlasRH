@@ -62,13 +62,14 @@ Les endpoints RH sont accessibles sous `/api` :
 | `GET`, `POST` | `/departments` | Lister et créer les départements |
 | `GET`, `PUT`, `DELETE` | `/departments/{id}` | Consulter, modifier ou supprimer un département |
 | `GET` | `/employees` | Rechercher et paginer (`q`, `departmentId`, `page`, `size`, `sort`) |
+| `GET` | `/employees/active-names` | Lister les employés actifs, triés par prénom puis nom |
 | `GET` | `/employees/{id}/team` | Consulter l’équipe d’un manager avec pagination |
 | `GET`, `PUT`, `DELETE` | `/employees/{id}` | Consulter, modifier ou supprimer un employé |
-| `POST` | `/employees` | Créer un employé |
+| `POST` | `/employees` | Créer un employé (statut `ACTIVE` par défaut ; `status` accepte `ACTIVE` ou `INACTIVE`) |
 | `POST` | `/contracts` | Créer un contrat CDI, CDD ou STAGE |
 | `GET` | `/contracts/employee/{employeeId}` | Consulter l’historique des contrats d’un employé |
 | `PATCH` | `/contracts/{id}/end` | Terminer un contrat (`endDate` facultatif, format `YYYY-MM-DD`) |
-| `GET`, `POST`, `PUT` | `/leave-types`, `/leave-types/{id}` | Consulter et configurer les quotas annuels des congés annuel et exceptionnel |
+| `GET`, `POST`, `PUT` | `/leave-types`, `/leave-types/{id}` | Consulter et configurer le nombre annuel de jours de congé annuel et exceptionnel |
 | `POST`, `GET` | `/employees/{employeeId}/leave-requests` | Créer une demande et consulter l’historique de l’employé |
 | `PATCH` | `/employees/{employeeId}/leave-requests/{requestId}/cancel` | Annuler une demande en attente |
 | `GET` | `/employees/{employeeId}/leave-balance?year=2026` | Consulter le solde par type (année courante par défaut) |
@@ -76,7 +77,7 @@ Les endpoints RH sont accessibles sous `/api` :
 | `GET` | `/managers/{managerId}/leave-requests/pending` | Voir les demandes en attente de son équipe |
 | `PATCH` | `/managers/{managerId}/leave-requests/{requestId}/decision` | Approuver ou refuser une demande de son équipe |
 
-Les corps de création et modification utilisent les DTO du projet. Les deux types et quotas (`ANNUAL`, 22 jours ; `EXCEPTIONAL`, 3 jours) sont préchargés par Liquibase. Les jours ouvrés sont calculés du lundi au vendredi, dates comprises ; les jours fériés ne sont pas pris en compte. En V1, les routes reçoivent un `employeeId` et ne vérifient pas l’identité de l’appelant. Les erreurs sont renvoyées en JSON avec un statut adapté : `400` pour une requête invalide, `404` pour une ressource absente et `409` en cas de conflit métier.
+Les corps de création et modification utilisent les DTO du projet. Les deux types et leur nombre annuel de jours de congé (`ANNUAL`, 22 jours ; `EXCEPTIONAL`, 3 jours) sont préchargés par Liquibase. Les jours ouvrés sont calculés du lundi au vendredi, dates comprises ; les jours fériés ne sont pas pris en compte. En V1, les routes reçoivent un `employeeId` et ne vérifient pas l’identité de l’appelant. Les erreurs sont renvoyées en JSON avec un statut adapté : `400` pour une requête invalide, `404` pour une ressource absente et `409` en cas de conflit métier.
 
 ## Architecture en couches
 
@@ -120,6 +121,7 @@ classDiagram
       String email
       String poste
       LocalDate hireDate
+      EmployeeStatus status
     }
     class Contract {
       Long id
@@ -223,9 +225,9 @@ Réponses attendues : `201` création, `200` consultation/modification, `204` su
 | Sujet | État |
 | --- | --- |
 | API Responsable RH (US1–US3) | Implémentée et couverte par les règles de validation métier |
-| API Employé (US5–US6) et Manager (US4) | Implémentées ; statut, dates, chevauchement, quotas et commentaire de refus appliqués |
+| API Employé (US5–US6) et Manager (US4) | Implémentées ; statut, dates, chevauchement, jours de congé disponibles et commentaire de refus appliqués |
 | Recherche, pagination, tri, équipe manager | Implémentés, y compris filtre par département |
-| PostgreSQL, migrations Liquibase, quotas et données fictives liées | Implémentés ; changelog testé avec PostgreSQL |
+| PostgreSQL, migrations Liquibase, jours de congé annuels et données fictives liées | Implémentés ; changelog testé avec PostgreSQL |
 | DTO, MapStruct, erreurs JSON, Swagger/OpenAPI, logs SLF4J | Implémentés |
 | Vérification | Compilation réussie ; 3 tests métier, 1 test API/PostgreSQL et 1 test de contexte réussis |
 | Jira et présentation | Documents de préparation fournis dans `docs/` ; créer/importer les tickets dans le Jira de l’équipe et répéter la démonstration |

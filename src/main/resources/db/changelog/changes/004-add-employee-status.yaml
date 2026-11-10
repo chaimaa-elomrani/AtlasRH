@@ -1,0 +1,16 @@
+databaseChangeLog:
+  - changeSet:
+      id: 009-add-employee-status
+      author: atlasrh
+      changes:
+        - addColumn:
+            tableName: employee
+            columns:
+              - column:
+                  name: status
+                  type: VARCHAR(10)
+                  defaultValue: ACTIVE
+                  constraints:
+                    nullable: false
+        - sql:
+            sql: ALTER TABLE employee ADD CONSTRAINT ck_employee_valid_status CHECK (status IN ('ACTIVE', 'INACTIVE'))

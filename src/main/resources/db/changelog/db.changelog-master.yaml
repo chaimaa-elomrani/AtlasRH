@@ -8,3 +8,6 @@ databaseChangeLog:
   - include:
       file: changes/003-create-leave-management.yaml
       relativeToChangelogFile: true
+  - include:
+      file: changes/004-add-employee-status.yaml
+      relativeToChangelogFile: true
