@@ -53,16 +53,16 @@ Ce document est structuré pour reporter les tickets dans le projet Jira de l’
 **Critères d’acceptation**
 
 - L’employé crée une demande avec dates, type et motif ; nombre de jours calculé sur les jours ouvrés inclusifs.
-- Les dates inversées, périodes qui se chevauchent et demandes dépassant le quota sont rejetées.
+- Les dates inversées, périodes qui se chevauchent et demandes dépassant le nombre de jours de congé disponible sont rejetées.
 - L’historique est filtrable par statut ; seule une demande en attente peut être annulée par son employé.
 
-**Tâches** : types et quotas de démonstration ; calcul des jours ouvrés ; règles de recouvrement et quota ; annulation/filtre ; tests de service et de bout en bout.
+**Tâches** : types et nombres annuels de jours de congé de démonstration ; calcul des jours ouvrés ; règles de recouvrement et de jours disponibles ; annulation/filtre ; tests de service et de bout en bout.
 
 ### US6 — Consulter solde et ancienneté
 
 **Critères d’acceptation**
 
-- Le solde restant est dérivé du quota annuel moins les jours approuvés dans l’année demandée.
+- Les jours de congé restants sont calculés en retirant les congés approuvés du nombre annuel prévu pour l’année demandée.
 - L’ancienneté est calculée depuis la date d’embauche en années, mois et jours.
 - Les IDs inconnus renvoient `404`.
 

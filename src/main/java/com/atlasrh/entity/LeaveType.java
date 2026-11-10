@@ -20,11 +20,26 @@ public class LeaveType {
     @Column(name = "days_per_year", nullable = false)
     private int daysPerYear;
 
-    public LeaveType() {}
+    public LeaveType() {
+    }
 
-    public Long getId() { return id; }
-    public LeaveTypeCode getCode() { return code; }
-    public void setCode(LeaveTypeCode code) { this.code = code; }
-    public int getDaysPerYear() { return daysPerYear; }
-    public void setDaysPerYear(int daysPerYear) { this.daysPerYear = daysPerYear; }
+    public Long getId() {
+        return id;
+    }
+
+    public LeaveTypeCode getCode() {
+        return code;
+    }
+
+    public void setCode(LeaveTypeCode code) {
+        this.code = code;
+    }
+
+    public int getDaysPerYear() {
+        return daysPerYear;
+    }
+
+    public void setDaysPerYear(int daysPerYear) {
+        this.daysPerYear = daysPerYear;
+    }
 }

@@ -5,4 +5,6 @@ import com.atlasrh.entity.LeaveType;
 import org.mapstruct.Mapper;
 
 @Mapper(componentModel = "spring")
-public interface LeaveTypeMapper { LeaveTypeResponse toResponse(LeaveType type); }
+public interface LeaveTypeMapper {
+    LeaveTypeResponse toResponse(LeaveType type);
+}

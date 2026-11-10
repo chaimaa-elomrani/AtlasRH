@@ -12,11 +12,15 @@ import java.util.List;
 @RequestMapping("/api/managers/{managerId}/leave-requests")
 public class ManagerLeaveController {
     private final EmployeeLeaveService service;
-    public ManagerLeaveController(EmployeeLeaveService service) { this.service = service; }
+    public ManagerLeaveController(EmployeeLeaveService service) {
+        this.service = service;
+    }
 
     @Operation(summary = "List pending leave requests from this manager's team")
     @GetMapping("/pending")
-    public List<LeaveRequestResponse> pending(@PathVariable Long managerId) { return service.findPendingForManager(managerId); }
+    public List<LeaveRequestResponse> pending(@PathVariable Long managerId) {
+        return service.findPendingForManager(managerId);
+    }
 
     @Operation(summary = "Approve or refuse a pending team request; refusal requires a comment")
     @PatchMapping("/{requestId}/decision")

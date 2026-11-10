@@ -57,7 +57,7 @@ public class EmployeeService {
                 .filter(employee -> employee.getStatus() == EmployeeStatus.ACTIVE)
                 .sorted(Comparator.comparing(Employee::getFirstName)
                         .thenComparing(Employee::getLastName))
-                .map(employee -> employee.getFirstName() + " " + employee.getLastName())
+                .map(employee -> employee.getLastName() + " " + employee.getFirstName())
                 .toList();
     }
 
@@ -131,4 +131,6 @@ public class EmployeeService {
     private EmployeeResponse toResponse(Employee e) {
         return mapper.toResponse(e);
     }
+
+
 }
